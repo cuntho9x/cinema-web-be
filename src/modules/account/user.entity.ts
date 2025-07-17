@@ -1,43 +1,43 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import { IsNotEmpty, IsEmail } from 'class-validator';
 
-@Entity()
+@Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
-  id: number;
+  user_id: number;
 
   @Column()
-  cardNumber: string;
+  full_name: string;
 
-  @Column()
-  level: 'bronze' | 'silver' | 'gold' | 'plat' | 'diamond';
-
-  @Column()
-  registeredAt: Date;
-
-  @Column()
-  lastName: string;
-
-  @Column()
-  firstName: string;
-
-  @Column({ unique: true })
+  @Column({ unique: true, nullable: false })
+  @IsNotEmpty({ message: 'Email không được để trống' })
+  @IsEmail({}, { message: 'Email không hợp lệ' })
   email: string;
 
   @Column()
-  password: string; // hashed password
+  hash_password: string;
 
-  @Column()
-  phone: string;
+  @Column({ nullable: true })
+  phone_number: string;
 
-  @Column()
+  @Column({ nullable: true })
   gender: string;
 
-  @Column({ type: 'date' })
-  birthDate: string;
+  @Column({ type: 'date', nullable: true })
+  birthday: Date;
 
-  @Column()
-  city: string;
-
-  @Column()
+  @Column({ nullable: true })
   address: string;
+
+  @Column({ default: 'customer' })
+  role: string; // admin/customer
+
+  @Column({ nullable: true })
+  avatar_img: string;
+
+  @CreateDateColumn()
+  created_at: Date;
+
+  @CreateDateColumn()
+  registered_at: Date;
 }

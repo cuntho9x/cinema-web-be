@@ -1,17 +1,18 @@
-import { Controller, Get } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Body, Controller, Post, Get } from '@nestjs/common';
+import { AccountService } from './account.service';
 import { User } from './user.entity';
 
 @Controller('account')
 export class AccountController {
-  constructor(
-    @InjectRepository(User)
-    private readonly userRepo: Repository<User>,
-  ) {}
+  constructor(private readonly accountService: AccountService) {}
+
+  @Post('register')
+  async register(@Body() body: Partial<User>) {
+    return this.accountService.createUser(body);
+  }
 
   @Get()
-  async getAllUsers() {
-    return this.userRepo.find();
+  findAll() {
+    return this.accountService.findAll();
   }
 }
