@@ -1,14 +1,13 @@
+// account.module.ts (hoặc auth.module.ts)
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-
-import { User } from './user.entity';
-import { AccountController } from './account.controller';
 import { AccountService } from './account.service';
+import { AccountController } from './account.controller';
+import { PrismaService } from '../prisma/prisma.service';
+import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User])],
+  imports:[PrismaModule],
   controllers: [AccountController],
-  providers: [AccountService],
-  exports: [AccountService],
+  providers: [AccountService, PrismaService],
 })
 export class AccountModule {}

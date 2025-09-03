@@ -1,22 +1,12 @@
+
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from './user.entity';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class AccountService {
-  constructor(
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
-  async createUser(data: Partial<User>): Promise<User> {
-    const user = this.userRepository.create(data);
-    return this.userRepository.save(user);
+  async getAllAccounts() {
+    return this.prisma.user.findMany(); 
   }
-
-  async findAll(): Promise<User[]> {
-    return this.userRepository.find();
-  }
-
 }

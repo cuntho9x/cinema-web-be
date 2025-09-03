@@ -1,15 +1,296 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
+}
+
+//users
+model User {
+  user_id       Int       @id @default(autoincrement())
+  full_name     String
+  email         String    @unique
+  hash_password String
+  phone_number  String?
+  gender        Gender
+  birthday      DateTime?
+  address       String?
+  role          String    @default("customer")
+  avatar_img    String?
+  created_at    DateTime  @default(now())
+  registered_at DateTime  @default(now())
+
+  orders         Order[]
+
+  @@map("users")
+}
+
+enum Gender {
+  male
+  female
+}
+
+//movies
+model Movie {
+  movie_id          Int             @id @default(autoincrement())
+  movie_poster      String?         @db.VarChar(255)
+  movie_trailer     String?         @db.VarChar(255)
+  movie_title       String          @db.VarChar(200)
+  movie_title_url   String          @unique @db.VarChar(255)
+  duration          Int
+  release_date      DateTime
+  movie_review      String?         @db.Text
+  country           Country
+  movie_producer    String          @db.VarChar(100)
+  directors         String?         @db.VarChar(255)
+  cast              String?         @db.Text
+  movie_description String?         @db.Text
+  status            MovieStatus
+  graphics_type     GraphicsType    @default(TWO_D)
+  translation_type  TranslationType @default(PhuDe)
+  age_restriction   AgeRestriction  @default(P)
+
+  movieGenres MovieGenre[] // relation table
+
+  scheduleLists ScheduleList[] // Một phim có nhiều lịch chiếu tổng thể
+  showtimes     ScheduleShowtime[] // Một phim có nhiều suất chiếu
+}
+
+model Genre {
+  id   Int    @id @default(autoincrement())
+  name String @unique @db.VarChar(100)
+
+  movieGenres MovieGenre[]
+}
+
+model MovieGenre {
+  movie Movie @relation(fields: [movieId], references: [movie_id])
+  genre Genre @relation(fields: [genreId], references: [id])
+
+  movieId Int
+  genreId Int
+
+  @@id([movieId, genreId])
+}
+
+enum MovieStatus {
+  nowShowing
+  comingSoon
+  stopped
+}
+
+enum Country {
+  VietNam @map("Việt Nam")
+  My      @map("Mỹ")
+  HanQuoc @map("Hàn Quốc")
+  NhatBan @map("Nhật Bản")
+}
+
+enum GraphicsType {
+  TWO_D   @map("2D")
+  THREE_D @map("3D")
+  IMAX
+}
+
+enum TranslationType {
+  LongTieng @map("Lồng Tiếng")
+  PhuDe     @map("Phụ Đề")
+}
+
+enum AgeRestriction {
+  P   @map("Phù hợp với mọi lứa tuổi")
+  C13 @map("Cấm dưới 13 tuổi")
+  C16 @map("Cấm dưới 16 tuổi")
+  C18 @map("Cấm dưới 18 tuổi")
+}
+
+// foods
+model Food {
+  food_id          Int     @id @default(autoincrement())
+  food_img         String? @db.VarChar(255)
+  food_name        String  @db.VarChar(100)
+  food_description String? @db.Text
+  food_price       Decimal @db.Decimal(10, 2)
+
+  @@map("foods")
+}
+
+//promotions
+model Promotion {
+  promotions_id          Int     @id @default(autoincrement())
+  promotions_img         String? @db.VarChar(255)
+  promotions_name        String  @db.VarChar(100)
+  promotions_description String? @db.Text
+
+  @@map("promotions")
+}
+
+//theater
+model Theater {
+  theater_id          Int    @id @default(autoincrement())
+  theater_name        String @db.VarChar(100)
+  theater_address     String @db.Text
+  theater_phoneNumber String @db.VarChar(20)
+  theater_title_url   String @unique @db.VarChar(100)
+  map_url             String @db.Text
+
+  rooms             Room[] // Một rạp có nhiều phòng chiếu
+  scheduleShowtimes ScheduleShowtime[]
+}
+
+//article
+model Article {
+  article_id        Int    @id @default(autoincrement())
+  article_title     String @db.VarChar(255)
+  article_slug      String @unique
+  article_thumbnail String @db.Text
+  article_type      String @db.VarChar(20) // 'review' | 'blog'
+  article_content1  String @db.LongText
+  article_image1    String @db.Text
+  article_content2  String @db.LongText
+  article_image2    String @db.Text
+  article_content3  String @db.LongText
+}
+
+// Room
+model Room {
+  room_id    Int      @id @default(autoincrement())
+  theater_id Int
+  room_name  String   @db.VarChar(100)
+  room_slug  String   @db.VarChar(120) // thêm slug cho room
+  row        Int
+  column     Int
+  room_type  RoomType
+
+  seats             Seat[]
+  theater           Theater            @relation(fields: [theater_id], references: [theater_id])
+  scheduleShowtimes ScheduleShowtime[]
+
+  @@unique([theater_id, room_name]) // Tên phòng duy nhất trong 1 rạp
+  @@unique([theater_id, room_slug]) // Slug cũng duy nhất trong 1 rạp
+  @@map("rooms")
+}
+
+
+
+enum RoomType {
+  TWO_D   @map("2D")
+  THREE_D @map("3D")
+  IMAX
+}
+
+// Seat
+model Seat {
+  seat_id       Int        @id @default(autoincrement())
+  room_id       Int
+  row_label     String     @db.VarChar(2)
+  column_number Int
+  seat_code     String     @db.VarChar(10) // Ví dụ: A1, G12
+  seat_type     SeatType
+  status        SeatStatus
+  room          Room       @relation(fields: [room_id], references: [room_id])
+
+  tickets       Ticket[]
+
+  @@unique([room_id, seat_code]) // Đảm bảo mã ghế duy nhất trong mỗi phòng
+  @@map("seats")
+}
+
+enum SeatType {
+  STANDARD
+  VIP
+  COUPLE
+}
+
+enum SeatStatus {
+  AVAILABLE // Ghế còn trống
+  SELECTED // Đang có người chọn (hold)
+  SOLD // Đã bán
+  UNAVAILABLE // Không khả dụng
+}
+
+//seat_price
+model SeatPrice {
+  price_id   Int      @id @default(autoincrement())
+  seat_type  SeatType
+  base_price Int // giá gốc theo loại ghế, ví dụ 60000, 80000
+
+  @@unique([seat_type])
+}
+
+// lich chieu toan rap
+model ScheduleList {
+  id         Int      @id @default(autoincrement())
+  movie_id   Int
+  start_date DateTime
+  end_date   DateTime
+  movie      Movie    @relation(fields: [movie_id], references: [movie_id])
+}
+
+//suat chieu 
+model ScheduleShowtime {
+  id               Int             @id @default(autoincrement())
+  movie_id         Int
+  theater_id       Int
+  room_id          Int
+  show_date        DateTime
+  start_time       DateTime
+  end_time         DateTime
+  graphics_type    GraphicsType
+  translation_type TranslationType
+
+  movie   Movie   @relation(fields: [movie_id], references: [movie_id])
+  theater Theater @relation(fields: [theater_id], references: [theater_id])
+  room    Room    @relation(fields: [room_id], references: [room_id])
+  orders         Order[]
+}
+
+//order(booking)
+model Order {
+  order_id            Int       @id @default(autoincrement())
+  user_id             Int
+  schedule_showtime_id Int       // suất chiếu
+  order_date          DateTime  @default(now())
+  total_price         Int
+  discount            Int       @default(0)
+  status              OrderStatus @default(PENDING)
+
+  user                User      @relation(fields: [user_id], references: [user_id])
+  scheduleShowtime    ScheduleShowtime @relation(fields: [schedule_showtime_id], references: [id])
+  tickets             Ticket[]
+
+  @@map("orders")
+  @@index([user_id])
+  @@index([schedule_showtime_id])
+}
+
+model Ticket {
+  ticket_id   Int       @id @default(autoincrement())
+  order_id    Int
+  seat_id     Int
+  price       Int
+  status      TicketStatus @default(ACTIVE)
+  ticket_code String    @unique
+
+  order       Order     @relation(fields: [order_id], references: [order_id])
+  seat        Seat      @relation(fields: [seat_id], references: [seat_id])
+
+  @@map("tickets")
+  @@index([order_id])
+  @@index([seat_id])
+}
+
+enum OrderStatus {
+  PENDING     // Đang chờ
+  CONFIRMED   // Đã xác nhận
+  CANCELLED   // Hủy
+  COMPLETED   // Hoàn thành (đã xem)
+}
+
+enum TicketStatus {
+  ACTIVE      // Vé còn hiệu lực
+  USED        // Vé đã sử dụng
+  CANCELLED   // Vé bị hủy
 }
