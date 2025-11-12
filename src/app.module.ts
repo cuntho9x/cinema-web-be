@@ -14,6 +14,7 @@ import { SeatModule } from './modules/seat/seat.module';
 import { TicketModule } from './modules/ticket/ticket.module';
 import { ScheduleListModule } from './modules/schedule-list/schedule-list.module';
 import { ScheduleShowtimeModule } from './modules/schedule-showtime/schedule-showtime.module';
+import { OrderModule } from './modules/order/order.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { ScheduleShowtimeModule } from './modules/schedule-showtime/schedule-sho
     RoomModule,
     SeatModule,
     TicketModule,
+    OrderModule,
     ScheduleListModule,
     ScheduleShowtimeModule
   ],

@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, UseGuards, Req, Res } from '@nestjs/common
 import { Response, Request } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
+import { RegisterAdminDto } from './dto/register-admin.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
@@ -35,7 +36,14 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async getMe(@Req() req: Request) {
-    // req.user được gán bởi JwtStrategy.validate
-    return req.user;
+    // Lấy đầy đủ thông tin user từ database, bao gồm avatar_img
+    const user = req.user as any;
+    return this.authService.getUserById(user.user_id);
+  }
+
+  // Đăng ký admin - đơn giản như register customer
+  @Post('register-admin')
+  async registerAdmin(@Body() dto: RegisterAdminDto) {
+    return this.authService.registerAdmin(dto);
   }
 }

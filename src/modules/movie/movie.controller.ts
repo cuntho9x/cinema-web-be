@@ -23,18 +23,37 @@ export class MovieController {
   }
 
   @Get()
-  findAll(@Query('status') status?: string) {
-    return this.movieService.findAll(status);
+  findAll(
+    @Query('status') status?: string,
+    @Query('search') search?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const pageNumber = page ? parseInt(page, 10) : 1;
+    const pageSize = limit ? parseInt(limit, 10) : 10;
+    return this.movieService.findAll(status, search, pageNumber, pageSize);
   }
 
-  @Get(':slug')
-  findBySlug(@Param('slug') slug: string) {
-    return this.movieService.findBySlug(slug);
+  // Lấy tất cả thể loại - phải đặt TRƯỚC route :slug
+  @Get('genres/all')
+  findAllGenres() {
+    return this.movieService.findAllGenres();
+  }
+
+  //lấy title cho schedule - phải đặt TRƯỚC route :slug
+  @Get('all-for-schedule')
+  findAllForSchedule() {
+    return this.movieService.findAllForSchedule();
   }
 
   @Get('id/:id') // đổi lại route để không bị xung đột với slug
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.movieService.findOne(id);
+  }
+
+  @Get(':slug')
+  findBySlug(@Param('slug') slug: string) {
+    return this.movieService.findBySlug(slug);
   }
 
   @Put(':id')
@@ -48,13 +67,6 @@ export class MovieController {
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.movieService.remove(id);
-  }
-
-
-//lấy title cho schedule
-  @Get('all-for-schedule')
-  findAllForSchedule() {
-    return this.movieService.findAllForSchedule();
   }
 
 }

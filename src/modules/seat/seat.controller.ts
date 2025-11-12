@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Delete, Param, Body } from '@nestjs/common';
+import { Controller, Get, Patch, Delete, Param, Body, Post } from '@nestjs/common';
 import { SeatService } from './seat.service';
 import { UpdateSeatDto } from './dto/update-seat.dto';
 
@@ -12,6 +12,16 @@ export class SeatController {
     @Param('roomSlug') roomSlug: string,
   ) {
     return this.seatService.findAllInRoom(theaterSlug, roomSlug);
+  }
+
+  // Route 'bulk-update' MUST come before ':seatCode' to avoid route conflict
+  @Post('bulk-update')
+  updateMany(
+    @Param('theaterSlug') theaterSlug: string,
+    @Param('roomSlug') roomSlug: string,
+    @Body() updates: Array<{ seatCode: string; seat_type?: string; status?: string }>,
+  ) {
+    return this.seatService.updateMany(theaterSlug, roomSlug, updates);
   }
 
   @Get(':seatCode')

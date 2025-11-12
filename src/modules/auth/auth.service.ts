@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { Response } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
@@ -12,6 +12,32 @@ export class AuthService {
     private jwtService: JwtService,
     private config: ConfigService,
   ) {}
+
+  // Get user by ID with full info including avatar
+  async getUserById(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { user_id: userId },
+      select: {
+        user_id: true,
+        full_name: true,
+        email: true,
+        phone_number: true,
+        gender: true,
+        birthday: true,
+        address: true,
+        role: true,
+        avatar_img: true,
+        created_at: true,
+        registered_at: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
+  }
 
   async register(dto: any) {
     const hash = await bcrypt.hash(dto.password, 10);
@@ -74,5 +100,28 @@ export class AuthService {
     });
 
     return { message: 'Đăng xuất thành công' };
+  }
+
+  // Đăng ký admin - đơn giản như register customer nhưng role là admin
+  async registerAdmin(dto: any) {
+    const hash = await bcrypt.hash(dto.password, 10);
+
+    const user = await this.prisma.user.create({
+      data: {
+        full_name: dto.full_name,
+        email: dto.email,
+        hash_password: hash,
+        phone_number: dto.phone_number,
+        gender: dto.gender.toLowerCase(),
+        birthday: new Date(dto.birthday),
+        address: dto.address,
+        role: 'admin', // Tạo với role admin
+        avatar_img: '/user/default-avatar.png',
+        created_at: new Date(),
+        registered_at: new Date(),
+      },
+    });
+
+    return { message: 'Đăng ký admin thành công', user };
   }
 }

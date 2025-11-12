@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseIntPipe } from '@nestjs/common';
 import { RoomService } from './room.service';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
@@ -48,5 +48,17 @@ export class RoomController {
     @Param('roomSlug') roomSlug: string
   ) {
     return this.roomService.remove(theaterSlug, roomSlug);
+  }
+}
+
+// Controller riêng để lấy rooms theo theater ID
+@Controller('rooms')
+export class RoomByIdController {
+  constructor(private readonly roomService: RoomService) {}
+
+  // Lấy tất cả phòng trong 1 theater theo ID
+  @Get('theater/:theaterId')
+  findAllInTheaterById(@Param('theaterId', ParseIntPipe) theaterId: number) {
+    return this.roomService.findAllInTheaterById(theaterId);
   }
 }

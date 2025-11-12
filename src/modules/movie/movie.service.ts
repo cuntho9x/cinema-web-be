@@ -38,13 +38,75 @@ export class MovieService {
   }
 
 
-  findAll(status?: string) {
-    const where = status ? { status: status as MovieStatus } : {};
-    return this.prisma.movie.findMany({ where });
+  async findAll(
+    status?: string,
+    search?: string,
+    page: number = 1,
+    limit: number = 10,
+  ) {
+    const where: any = {};
+    
+    if (status) {
+      where.status = status as MovieStatus;
+    }
+    
+    // Tìm kiếm theo tên phim (partial match - chứa chuỗi con)
+    // MySQL với collation utf8mb4_unicode_ci sẽ tự động case-insensitive
+    if (search && search.trim()) {
+      where.movie_title = {
+        contains: search.trim(),
+      };
+    }
+    
+    // Tính toán skip và take cho phân trang
+    const skip = (page - 1) * limit;
+    const take = limit;
+
+    // Lấy tổng số phim (để tính tổng số trang)
+    const total = await this.prisma.movie.count({ where });
+
+    // Lấy danh sách phim với phân trang
+    const movies = await this.prisma.movie.findMany({ 
+      where,
+      include: {
+        movieGenres: {
+          include: {
+            genre: true,
+          },
+        },
+      },
+      orderBy: {
+        movie_title: 'asc', // Sắp xếp theo tên A-Z
+      },
+      skip,
+      take,
+    });
+
+    // Tính tổng số trang
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      movies,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    };
   }
 
   findOne(id: number) {
-    return this.prisma.movie.findUnique({ where: { movie_id: id } });
+    return this.prisma.movie.findUnique({ 
+      where: { movie_id: id },
+      include: {
+        movieGenres: {
+          include: {
+            genre: true,
+          },
+        },
+      },
+    });
   }
 
   findBySlug(slug: string) {
@@ -108,6 +170,14 @@ export class MovieService {
       },
       orderBy: {
         movie_title: 'asc'
+      }
+    });
+  }
+
+  async findAllGenres() {
+    return this.prisma.genre.findMany({
+      orderBy: {
+        name: 'asc'
       }
     });
   }

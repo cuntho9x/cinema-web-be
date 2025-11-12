@@ -256,6 +256,7 @@ model Order {
   total_price         Int
   discount            Int       @default(0)
   status              OrderStatus @default(PENDING)
+  payment_method      String?   @db.VarChar(50) // Phương thức thanh toán: VNPAY, MoMo, ZaloPay, ShopeePay
 
   user                User      @relation(fields: [user_id], references: [user_id])
   scheduleShowtime    ScheduleShowtime @relation(fields: [schedule_showtime_id], references: [id])
@@ -286,7 +287,7 @@ enum OrderStatus {
   PENDING     // Đang chờ
   CONFIRMED   // Đã xác nhận
   CANCELLED   // Hủy
-  COMPLETED   // Hoàn thành (đã xem)
+  COMPLETED   // Hoàn thành 
 }
 
 enum TicketStatus {

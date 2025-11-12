@@ -58,4 +58,59 @@ export class SeatService {
 
     return this.prisma.seat.delete({ where: { seat_id: seat.seat_id } });
   }
+
+  async getAllSeatPrices() {
+    return this.prisma.seatPrice.findMany({
+      orderBy: { seat_type: 'asc' },
+    });
+  }
+
+  async updateMany(
+    theaterSlug: string,
+    roomSlug: string,
+    updates: Array<{ seatCode: string; seat_type?: string; status?: string }>,
+  ) {
+    const roomId = await this.findRoomId(theaterSlug, roomSlug);
+    const results: Array<{
+      seatCode: string;
+      success: boolean;
+      data?: any;
+      error?: string;
+    }> = [];
+    
+    for (const update of updates) {
+      const seat = await this.prisma.seat.findFirst({
+        where: { seat_code: update.seatCode, room_id: roomId },
+      });
+      
+      if (!seat) {
+        results.push({ seatCode: update.seatCode, success: false, error: 'Seat not found' });
+        continue;
+      }
+
+      const updateData: any = {};
+      if (update.seat_type !== undefined && update.seat_type !== null) {
+        updateData.seat_type = update.seat_type;
+      }
+      if (update.status !== undefined && update.status !== null) {
+        updateData.status = update.status;
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        try {
+          const updated = await this.prisma.seat.update({
+            where: { seat_id: seat.seat_id },
+            data: updateData,
+          });
+          results.push({ seatCode: update.seatCode, success: true, data: updated });
+        } catch (error: any) {
+          results.push({ seatCode: update.seatCode, success: false, error: error.message });
+        }
+      } else {
+        results.push({ seatCode: update.seatCode, success: false, error: 'No data to update' });
+      }
+    }
+
+    return results;
+  }
 }
