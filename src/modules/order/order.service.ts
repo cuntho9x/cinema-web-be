@@ -114,9 +114,40 @@ export class OrderService {
           })
         );
 
+        // Create order foods if provided
+        let orderFoods: any[] = [];
+        if (dto.foods && dto.foods.length > 0) {
+          // Validate foods exist
+          const foodIds = dto.foods.map(f => f.food_id);
+          const foods = await tx.food.findMany({
+            where: {
+              food_id: { in: foodIds },
+            },
+          });
+
+          if (foods.length !== foodIds.length) {
+            throw new BadRequestException('Some foods not found');
+          }
+
+          // Create order foods
+          orderFoods = await Promise.all(
+            dto.foods.map(async (foodDto) => {
+              return await (tx as any).orderFood.create({
+                data: {
+                  order_id: order.order_id,
+                  food_id: foodDto.food_id,
+                  quantity: foodDto.quantity,
+                  price: foodDto.price,
+                },
+              });
+            })
+          );
+        }
+
         return {
           order,
           tickets,
+          orderFoods,
         };
       });
     } catch (error) {
@@ -173,7 +204,12 @@ export class OrderService {
             seat: true,
           },
         },
-      },
+        orderFoods: {
+          include: {
+            food: true,
+          },
+        },
+      } as any,
     });
 
     if (!order) {
@@ -399,7 +435,12 @@ export class OrderService {
             seat: true,
           },
         },
-      },
+        orderFoods: {
+          include: {
+            food: true,
+          },
+        },
+      } as any,
     });
 
     if (!order) {

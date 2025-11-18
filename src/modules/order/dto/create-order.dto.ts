@@ -9,6 +9,19 @@ export class SeatDto {
   price: number;
 }
 
+export class FoodDto {
+  @IsInt()
+  food_id: number;
+
+  @IsInt()
+  @Min(1)
+  quantity: number;
+
+  @IsInt()
+  @Min(0)
+  price: number;
+}
+
 export enum PaymentMethod {
   VNPAY = 'VNPAY',
   MOMO = 'MoMo',
@@ -22,6 +35,10 @@ export class CreateOrderDto {
 
   @IsArray()
   seats: SeatDto[];
+
+  @IsArray()
+  @IsOptional()
+  foods?: FoodDto[]; // Danh sách combo/food đã đặt
 
   @IsInt()
   @Min(0)

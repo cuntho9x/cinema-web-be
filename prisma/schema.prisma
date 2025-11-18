@@ -114,6 +114,8 @@ model Food {
   food_description String? @db.Text
   food_price       Decimal @db.Decimal(10, 2)
 
+  orderFoods       OrderFood[]
+
   @@map("foods")
 }
 
@@ -261,6 +263,7 @@ model Order {
   user                User      @relation(fields: [user_id], references: [user_id])
   scheduleShowtime    ScheduleShowtime @relation(fields: [schedule_showtime_id], references: [id])
   tickets             Ticket[]
+  orderFoods          OrderFood[]
 
   @@map("orders")
   @@index([user_id])
@@ -294,4 +297,20 @@ enum TicketStatus {
   ACTIVE      // Vé còn hiệu lực
   USED        // Vé đã sử dụng
   CANCELLED   // Vé bị hủy
+}
+
+// OrderFood 
+model OrderFood {
+  order_food_id Int @id @default(autoincrement())
+  order_id      Int
+  food_id       Int
+  quantity      Int // Số lượng combo đã đặt
+  price         Int // Giá tại thời điểm đặt (để lưu lại giá gốc)
+
+  order         Order @relation(fields: [order_id], references: [order_id], onDelete: Cascade)
+  food          Food  @relation(fields: [food_id], references: [food_id])
+
+  @@map("order_foods")
+  @@index([order_id])
+  @@index([food_id])
 }
